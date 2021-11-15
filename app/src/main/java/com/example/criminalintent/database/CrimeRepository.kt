@@ -25,6 +25,7 @@ class CrimeRepository private constructor(context: Context){
 
 
     private val executor = Executors.newSingleThreadExecutor()
+    // pointer
     private val filesDir = context.applicationContext.filesDir
 
     fun getAllCrimes():LiveData< List<Crime>>  = crimeDao.getAllCrimes()

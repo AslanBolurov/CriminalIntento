@@ -1,24 +1,21 @@
 package com.example.criminalintent.crimeFragment
 
+import android.Manifest
 import android.app.Activity
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.content.pm.ResolveInfo
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
 import android.net.Uri
 import android.os.Bundle
 import android.provider.ContactsContract
-import android.provider.MediaStore
 import android.text.Editable
 import android.text.TextWatcher
 import android.text.format.DateFormat
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.*
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
@@ -61,19 +58,51 @@ class CrimeFragment : Fragment(),DatePickerDialogFragment.DatePickerCallback {
 
 
 
-
-
-    private val getResult =
-        registerForActivityResult(ActivityResultContracts.TakePicture()){
+    private val getImageLauncher =
+        registerForActivityResult(ActivityResultContracts.TakePicture()){ isWrten->
 
         }
+
+
+    private val requestPermission =
+        registerForActivityResult(ActivityResultContracts
+            .RequestPermission()){
+
+    }
 
     override fun onStart() {
         super.onStart()
 
+
         photoButton.setOnClickListener {
+
+
+            if (PackageManager.PERMISSION_GRANTED == context?.let {context->
+                    ContextCompat.checkSelfPermission(context,
+                        Manifest.permission.CAMERA) }){
+                    getImageLauncher.launch(photoUri)
+                }else{
+                requestPermission.launch(
+                    Manifest.permission.CAMERA)
+                }
+
             // launch the cam
-            getResult.launch(photoUri)
+            when (PackageManager.PERMISSION_GRANTED) {
+                context?.let {
+                    ContextCompat.checkSelfPermission(
+                        it,
+                        Manifest.permission.CAMERA
+                    )
+                } -> {
+                    getImageLauncher.launch(photoUri)
+                }
+                else -> {
+                    // You can directly ask for the permission.
+                    // The registered ActivityResultCallback gets the result of this request.
+
+                }
+            }
+
 
         }
 
@@ -161,10 +190,13 @@ class CrimeFragment : Fragment(),DatePickerDialogFragment.DatePickerCallback {
 
 
 
+
         fragmentViewModel.crimeLiveData.observe(
             viewLifecycleOwner, {
                 it?.let {
                     crime = it
+
+
 
                     photoFile = fragmentViewModel.getPhotoFile(it)
                     photoUri = FileProvider.getUriForFile(requireActivity(),
